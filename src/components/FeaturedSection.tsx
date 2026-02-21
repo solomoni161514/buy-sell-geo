@@ -1,14 +1,16 @@
 import { Heart, ArrowRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { Link } from "react-router-dom";
-import listingApartment from "@/assets/listing-apartment.jpg";
-import listingCamera from "@/assets/listing-camera.jpg";
-import listingCar from "@/assets/listing-car.jpg";
-import listingApartment2 from "@/assets/listing-apartment2.jpg";
-import listingJewelry from "@/assets/listing-jewelry.jpg";
+import { useEffect, useState } from 'react';
+import listingApartment from '@/assets/listing-apartment.jpg';
+import listingApartment2 from '@/assets/listing-apartment2.jpg';
+import listingCamera from '@/assets/listing-camera.jpg';
+import listingCar from '@/assets/listing-car.jpg';
+import listingJewelry from '@/assets/listing-jewelry.jpg';
+const PLACEHOLDER = '/placeholder.svg';
 
 interface Listing {
-  id: number;
+  id: string;
   image: string;
   title: string;
   location: string;
@@ -18,16 +20,51 @@ interface Listing {
   large?: boolean;
 }
 
+interface ProductData {
+  _id?: string;
+  images?: string[];
+  title?: string;
+  location?: string;
+  price?: number | string;
+  type?: string;
+  category?: string;
+}
+
 const FeaturedSection = () => {
   const { t } = useLanguage();
+  const [listings, setListings] = useState<Listing[]>([]);
 
-  const listings: Listing[] = [
-    { id: 1, image: listingApartment, title: "Luxury Penthouse Suite", location: "Tbilisi, Vake", price: "₾4,500" + t("perMonth"), type: "rent", category: t("realEstateCategory"), large: true },
-    { id: 2, image: listingCamera, title: "Sony Alpha A7IV", location: "Tbilisi", price: "₾6,498", type: "buy", category: t("electronicsCategory") },
-    { id: 3, image: listingCar, title: "Tesla Model S Plaid", location: "Batumi", price: "₾289,000", type: "buy", category: t("vehiclesCategory") },
-    { id: 4, image: listingApartment2, title: "Modern Studio Apartment", location: "Tbilisi, Saburtalo", price: "₾1,200" + t("perMonth"), type: "rent", category: t("realEstateCategory") },
-    { id: 5, image: listingJewelry, title: "Diamond Gold Necklace", location: "Tbilisi", price: "₾12,500", type: "sell", category: t("jewelryCategory") },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+  const res = await import('@/lib/api').then(m => m.apiFetch('/api/products'));
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!mounted) return;
+        const mapped = (data || [])
+          .slice(0, 6)
+          .map((p: ProductData, idx: number) => {
+            const imgs = p.images && p.images.length ? p.images[0] : [listingApartment, listingCamera, listingCar, listingApartment2, listingJewelry][idx % 5];
+            const rawType = p.type === 'rent' ? 'rent' : p.type === 'buy' ? 'buy' : 'sell';
+            return {
+              id: p._id || String(idx),
+              image: imgs,
+              title: p.title || 'No title',
+              location: p.location || 'Unknown',
+              price: typeof p.price === 'number' ? `₾${p.price}` : (p.price ? String(p.price) : 'N/A'),
+              type: rawType as Listing['type'],
+              category: p.category || t('realEstateCategory'),
+              large: idx === 0,
+            } as Listing;
+          });
+        setListings(mapped);
+      } catch (err) {
+        // ignore - keep empty
+      }
+    })();
+    return () => { mounted = false; };
+  }, [t]);
 
   const badgeClass = (type: string) =>
     type === "rent" ? "badge-rent" : type === "buy" ? "badge-buy" : "badge-sell";
@@ -48,14 +85,19 @@ const FeaturedSection = () => {
       </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {listings.map((item) => (
-          <div
+        {listings.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No featured listings yet.</div>
+        ) : (
+          listings.map((item) => (
+          <Link
+            to={`/product/${item.id}`}
             key={item.id}
             className={`listing-card group ${item.large ? "sm:col-span-1 lg:row-span-2" : ""}`}
+            aria-label={`View ${item.title}`}
           >
             <div className={`relative overflow-hidden ${item.large ? "h-72 lg:h-full" : "h-52"}`}>
               <img
-                src={item.image}
+                src={item.image || PLACEHOLDER}
                 alt={item.title}
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
@@ -83,8 +125,9 @@ const FeaturedSection = () => {
                 <span className="text-sm font-bold text-background">{item.price}</span>
               </div>
             </div>
-          </div>
-        ))}
+          </Link>
+          ))
+        )}
       </div>
     </section>
   );

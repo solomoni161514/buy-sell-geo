@@ -1,73 +1,62 @@
-# Welcome to your Lovable project
+# buy-sell-geo
 
-## Project info
+A Vite + React frontend with an Express + MongoDB backend (monorepo style). This repository contains both the client (root) and server (`/server`).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Quick local development
 
-## How can I edit this code?
+- Install dependencies and run both parts:
 
-There are several ways of editing your application.
+```bash
+# from repo root
+npm install
 
-**Use Lovable**
+# Start backend (server) in another terminal
+cd server
+npm install
+npm run dev
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Back in repo root: start client dev server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The Vite dev server proxies `/api` to `http://localhost:4000` (see `vite.config.ts`).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Build & run (production simulation)
 
-**Use GitHub Codespaces**
+```bash
+# from repo root
+npm ci
+npm run build        # builds client into /dist
+node server/index.js # serves API and static client on PORT (default 4000)
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Docker
 
-## What technologies are used for this project?
+Build and run a production container:
 
-This project is built with:
+```bash
+docker build -t buy-sell-geo .
+docker run -e MONGO_URI="your-mongo-uri" -p 4000:4000 buy-sell-geo
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The container runs `node server/index.js` and serves the built client from `/dist` when present.
 
-## How can I deploy this project?
+## Deploying to Heroku / Railway / Render
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+- Ensure environment variables are set: `MONGO_URI`, `PORT`, and `JWT_SECRET`.
+- The repo includes a `Procfile` (`web: node server/index.js`). The root `package.json` contains `postinstall` which runs the client build so platforms that run `npm install` will build the client before starting the server.
 
-## Can I connect a custom domain to my Lovable project?
+## Files added to support hosting
 
-Yes, you can!
+- `Dockerfile` — multi-stage build (builds client, then runs server).
+- `.dockerignore` — files to exclude in Docker build context.
+- `Procfile` — for Heroku-style platforms.
+- Server now serves `/dist` if present (static SPA fallback).
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## Next recommended steps
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Add a small health endpoint (e.g., `/healthz`) for platform readiness checks.
+- Add GitHub Actions to build and run tests on push.
+- Secure environment: set `JWT_SECRET` and production MongoDB URI in environment variables.
+
+If you want, I can add a health endpoint and a GitHub Actions workflow next.

@@ -1,9 +1,21 @@
 import { Search, MapPin, ShieldCheck, BadgeCheck } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import heroBg from "@/assets/hero-bg.jpg";
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const HeroSection = () => {
   const { t } = useLanguage();
+  const [q, setQ] = useState('');
+  const [loc, setLoc] = useState('');
+  const navigate = useNavigate();
+
+  const doSearch = () => {
+    const params = new URLSearchParams();
+    if (q.trim()) params.set('q', q.trim());
+    if (loc.trim()) params.set('loc', loc.trim());
+    navigate(`/listings?${params.toString()}`);
+  };
 
   return (
     <section
@@ -29,6 +41,9 @@ const HeroSection = () => {
           <input
             type="text"
             placeholder={t("searchWhat")}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && doSearch()}
             className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
           />
           <div className="hidden sm:flex items-center gap-1 border-l border-border pl-3 text-muted-foreground">
@@ -36,10 +51,13 @@ const HeroSection = () => {
             <input
               type="text"
               placeholder={t("locationOptional")}
+              value={loc}
+              onChange={(e) => setLoc(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && doSearch()}
               className="bg-transparent text-sm placeholder:text-muted-foreground outline-none w-32"
             />
           </div>
-          <button className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
+          <button onClick={doSearch} className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition hover:opacity-90">
             {t("search")}
           </button>
         </div>

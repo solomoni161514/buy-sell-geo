@@ -43,6 +43,8 @@ export const translations = {
     sell: "გაყიდვა",
     perMonth: "/თვე",
 
+  addProduct: "განცხადების დამატება",
+
     // Auth
     loginTitle: "ანგარიშში შესვლა",
     registerTitle: "ახალი ანგარიშის შექმნა",
@@ -55,6 +57,7 @@ export const translations = {
     noAccount: "არ გაქვთ ანგარიში?",
     hasAccount: "უკვე გაქვთ ანგარიში?",
     orContinueWith: "ან გააგრძელეთ",
+  signOut: "გამოსვლა",
 
     // Listings
     listingsTitle: "ყველა განცხადება",
@@ -117,6 +120,7 @@ export const translations = {
     noAccount: "Don't have an account?",
     hasAccount: "Already have an account?",
     orContinueWith: "Or continue with",
+  signOut: "Sign Out",
 
     listingsTitle: "All Listings",
     listingsSubtitle: "Find the product or service you need.",
@@ -127,7 +131,8 @@ export const translations = {
 
     footerAbout: "The premium marketplace for everything.",
     footerRights: "All rights reserved.",
+    addProduct: "Add Product",
   },
 } as const;
 
-export type TranslationKey = keyof typeof translations.ka;
+export type TranslationKey = keyof (typeof translations)[keyof typeof translations];

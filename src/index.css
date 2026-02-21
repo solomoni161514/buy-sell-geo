@@ -1,8 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Georgian:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Georgian:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -116,6 +116,14 @@
   .listing-card:hover {
     box-shadow: var(--card-shadow-hover);
     @apply -translate-y-1;
+  }
+
+  /* Smooth transitions when theme changes. Applied transiently via the 'theme-transition' class on documentElement */
+  .theme-transition,
+  .theme-transition * {
+    transition-property: background-color, color, border-color, box-shadow, fill, stroke;
+    transition-duration: 260ms;
+    transition-timing-function: ease;
   }
 
   .badge-rent {
