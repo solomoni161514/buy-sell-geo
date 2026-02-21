@@ -7,6 +7,21 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// Configure CORS from env: CORS_ORIGIN can be a comma-separated list of allowed origins.
+const rawCors = process.env.CORS_ORIGIN;
+const corsOptions = rawCors
+  ? {
+      origin: rawCors.split(",").map((s) => s.trim()),
+      credentials: true,
+    }
+  : {
+      origin: true, // allow all if not specified
+      credentials: true,
+    };
+app.use(cors(corsOptions));
+// optional: expose CORS config in logs
+console.log("CORS configured:", rawCors || "allow all");
+
 const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/buysell";
 
 mongoose
