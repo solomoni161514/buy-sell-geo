@@ -1,13 +1,16 @@
 {
   "name": "buy-sell-geo-server",
-  "version": "0.1.0",
+  "version": "1.0.0",
+  "description": "Backend for Buy-Sell-GEO",
   "private": true,
   "main": "index.js",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "start": "node index.js",
-    "build": "cd ../client && npm ci && npm run build || true",
-    "dev": "nodemon index.js",
-    "postinstall": "npm --prefix server ci"
+    "dev": "nodemon index.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
