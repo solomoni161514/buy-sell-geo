@@ -32,6 +32,10 @@ const fs = require("fs");
 const DEFAULT_PORT = parseInt(process.env.PORT, 10) || 4000;
 const MAX_PORT_TRIES = 10;
 
+app.get("/", (req, res) => {
+  res.send("API is running 🚀");
+});
+
 function tryListen(portToTry, attempt = 0) {
   const server = http.createServer(app);
 
