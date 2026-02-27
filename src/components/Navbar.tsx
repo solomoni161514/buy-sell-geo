@@ -76,10 +76,80 @@ const Navbar = () => {
 
   function handleLogout() {
     localStorage.removeItem('token');
+    localStorage.removeItem('token_exp');
     localStorage.removeItem('user');
     setUser(null);
     navigate('/');
   }
+
+  // Auto-logout: schedule logout when token expiry is reached.
+  useEffect(() => {
+    let timer = null;
+
+    const decodeExpFromToken = (tok) => {
+      try {
+        const parts = tok.split('.');
+        if (parts.length !== 3) return null;
+        const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const json = decodeURIComponent(Array.prototype.map.call(atob(b64), c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+        const payload = JSON.parse(json);
+        if (payload && payload.exp) return payload.exp * 1000;
+      } catch (e) {
+        // ignore
+      }
+      return null;
+    };
+
+    const schedule = () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        let expiry = null;
+        const rawExp = localStorage.getItem('token_exp');
+        if (rawExp) expiry = parseInt(rawExp, 10);
+        else {
+          expiry = decodeExpFromToken(token) || (Date.now() + 14 * 24 * 60 * 60 * 1000);
+          localStorage.setItem('token_exp', String(expiry));
+        }
+        const remaining = expiry - Date.now();
+        if (remaining <= 0) {
+          handleLogout();
+          return;
+        }
+        // Clear any existing timer and set a new one
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+          handleLogout();
+        }, remaining);
+      } catch (e) {
+        // ignore
+      }
+    };
+
+    // schedule on mount
+    schedule();
+
+    // listen for storage changes (other tabs logins/logouts)
+    const onStorage = (e) => {
+      if (e.key === 'token' || e.key === 'token_exp' || e.key === 'user') {
+        // reschedule or logout immediately if token removed
+        if (!localStorage.getItem('token')) {
+          if (timer) clearTimeout(timer);
+          handleLogout();
+        } else {
+          // reschedule based on new values
+          if (timer) clearTimeout(timer);
+          schedule();
+        }
+      }
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []); // re-run when user changes (login/logout) to reschedule or clear auto-logout timer
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-xl">

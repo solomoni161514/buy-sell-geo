@@ -4,18 +4,21 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { useToast } from '@/hooks/use-toast';
+import SuccessAlert from "@/components/SuccessAlert";
 
 const Login = () => {
   const { t } = useLanguage();
   const [showPw, setShowPw] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <SuccessAlert open={showSuccess} message={t("loginButton") ? `${t("loginButton")} successful` : "Signed in successfully"} onClose={() => setShowSuccess(false)} />
       <div className="flex items-center justify-center px-4 py-20">
         <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 shadow-sm">
           <h1 className="text-2xl font-bold text-foreground text-center">{t("loginTitle")}</h1>
@@ -34,9 +37,34 @@ const Login = () => {
                 });
                 const data = await res.json();
                 if (!res.ok) return toast({ title: data.error || 'Login failed' });
-                localStorage.setItem('token', data.token);
+
+                // store token and user
+                const token = data.token;
+                // try to parse exp from JWT; fallback to 2 weeks
+                const parseExpFromJWT = (tok) => {
+                  try {
+                    const parts = tok.split('.');
+                    if (parts.length !== 3) return null;
+                    const b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    const json = decodeURIComponent(Array.prototype.map.call(atob(b64), (c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                    const payload = JSON.parse(json);
+                    if (payload && payload.exp) return payload.exp * 1000;
+                  } catch (e) {
+                    // ignore
+                  }
+                  return null;
+                };
+                let expiry = parseExpFromJWT(token);
+                if (!expiry) expiry = Date.now() + 14 * 24 * 60 * 60 * 1000;
+                localStorage.setItem('token', token);
+                localStorage.setItem('token_exp', String(expiry));
                 localStorage.setItem('user', JSON.stringify(data.user));
-                navigate('/');
+                // show success alert, then navigate shortly after
+                setShowSuccess(true);
+                setTimeout(() => {
+                  setShowSuccess(false);
+                  navigate('/');
+                }, 1200);
               } catch (err) {
                 toast({ title: 'Network error' });
               }
