@@ -66,7 +66,7 @@ const ProductPage: React.FC = () => {
     }
   }, []);
 
-  const SITE_PHONE = '+995599414381';
+  const SITE_PHONE = '+1234567890';
 
   const formatWhatsapp = (phone?: string) => {
     if (!phone) return null;
